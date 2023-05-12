@@ -1,13 +1,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![HitCount](https://hits.dwyl.com/mingkuan/voice-assistant-chatgpt.svg?style=flat-square&show=unique)](http://hits.dwyl.com/mingkuan/voice-assistant-chatgpt)
 
 
-# ChatGPT Voice Assistant Understanding 97 Languages
-
-This is a ChatGPT voice assistant web app that understands 97 different spoken languages. It is backed by the [awesome open sourced Whisper Automatic Speech Recogntion (ASR) model](https://github.com/openai/whisper) and the chatGTP Large Language Model (LLM), both provided by OpenAI. 
-
-You can click the "Push-To-Talk" button in the web app to ask ChatGPT about anything you are interested in many different languages. This web app will transcribe what you said and then send the request to OpenAI's chatGPT API to get the answer. And then it will then speak out chatGPT's answer using computer synthetic voice back to user.
-
-This repository includes sample code from the first book in the ***HOW-TO-DO-AI book series***, "AI/ML Web App Development for Everyone: A 5-Day Guide for Non-Coders to Build a Voice Assistant that Understands 97 Languages". This book is intended for everyone, including non-coders without a technology background, to develop an AI/ML web app easily with step-by-step guidence. You can get a copy of the book from [Kindle](https://www.amazon.com/dp/B0BX5BGQ5R), [Amazon Books](https://www.amazon.com/dp/B0BW3HG5G6), or [Gumroad](https://mingkuan.gumroad.com/l/cxfra). 
+Welcome to the ChatGPT voice assistant web app, a multilingual solution understanding 97 languages. Powered by OpenAI's Whisper ASR model and chatGPT Large Language Model (LLM).
 
 
 **Note**:
