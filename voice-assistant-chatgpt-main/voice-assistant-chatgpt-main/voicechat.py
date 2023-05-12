@@ -6,22 +6,26 @@ import magic
 import os
 import re
 
-# Define a function to generate TTS voices using the Web Speech API
 def generate_voice(text, voice):
-    # Define the JavaScript code to generate the voice
+    """Generates Text-To-Speech voice using the Web Speech API."""
+
     js_code = f"""
         const synth = window.speechSynthesis;
         const utterance = new SpeechSynthesisUtterance("{text}");
         utterance.voice = speechSynthesis.getVoices().filter((v) => v.name === "{voice}")[0];
         synth.speak(utterance);
     """
-    # Use the components module to embed the JavaScript code in the web page
+
+    # Embed the JavaScript code in the web page
     st.components.v1.html(f"<script>{js_code}</script>", height=0)
 
 
 def get_audio_record_format(orgfile):
+    """Determines the format of the audio recording file."""
+
     info = magic.from_file(orgfile).lower()
     print(f'\n\n Recording file info is:\n {info} \n\n')
+
     if 'webm' in info:
         return '.webm'
     elif 'iso media' in info:
@@ -33,9 +37,14 @@ def get_audio_record_format(orgfile):
 
 
 class Conversation:
+    """Handles conversation with OpenAI's GPT-3 model."""
+
     def __init__(self, engine):
         self.engine = engine
+
     def generate_response(self, message):
+        """Generates a response to a given message."""
+
         response = openai.Completion.create(
             engine=self.engine,
             prompt=message,
@@ -46,54 +55,62 @@ class Conversation:
             presence_penalty=0.6,
             frequency_penalty=0.6
         )
-        return response.choices[0].text
+
+        return response.choices[0].text.strip()
 
 
-@st.cache  # Decorator to cache heavy setups
+@st.cache
 def init_load_setups():
-    # setup asr engine
-    asrmodel = whisper.load_model('base', download_root='asrmodel' )
-    # setup chatGPT instance
+    """Loads necessary setups including ASR model and ChatGPT instance."""
+
+    # Setup ASR engine
+    asrmodel = whisper.load_model('base', download_root='asrmodel')
+
+    # Setup ChatGPT instance
     openai.api_key = os.getenv("OPENAI_API_KEY").strip('"')
     conversation = Conversation(engine="text-davinci-003")
-    # load tts voices and language code mapping
-    ttsVoices = {}
+
+    # Load TTS voices and language code mapping
+    tts_voices = {}
     for line in open('language-tts-voice-mapping.txt', 'rt').readlines():
         if len(line.strip().split(',')) == 3:
-            language, langCode, voiceName = line.strip().split(',')
-            ttsVoices[langCode.strip()] = voiceName.strip()
-    return asrmodel, conversation, ttsVoices
+            language, lang_code, voice_name = line.strip().split(',')
+            tts_voices[lang_code.strip()] = voice_name.strip()
+
+    return asrmodel, conversation, tts_voices
 
 
-# main voice chat app 
 def app():
-    # Put expensive initialize computation here
+    """Main voice chat application."""
+
     st.title("ChatGPT Voice Assistant")
     st.subheader("It understands 97 Spoken Languages!")
 
-    # get initial setup
-    asr, chatgpt, ttsVoices = init_load_setups()
+    # Get initial setup
+    asr, chatgpt, tts_voices = init_load_setups()
 
-    # recorder 
+    # Recorder
     audio = audiorecorder("Push to Talk", "Recording... (push again to stop)")
 
     if len(audio) > 0:
-        # To play audio in frontend:
+        # Play audio in frontend
         st.audio(audio.tobytes())
-        # To save audio to a file:
-        audioname='recording.tmp'
-        with open( audioname, "wb") as f:
+
+        # Save audio to a file
+        audio_name = 'recording.tmp'
+        with open(audio_name, "wb") as f:
             f.write(audio.tobytes())
-        ## get record file formate based on file magics
-        recordFormat = get_audio_record_format(audioname)
-        os.rename(audioname, audioname + recordFormat )
+        
+        # Get record file format based on file magics
+        record_format = get_audio_record_format(audio_name)
+               os.rename(audio_name, audio_name + record_format)
 
         st.markdown("<b>Chat History</b> ", unsafe_allow_html=True)
 
         with st.spinner("Recognizing your voice command ..."):
-            asr_result = asr.transcribe( audioname + recordFormat )
+            asr_result = asr.transcribe(audio_name + record_format)
             text = asr_result["text"]
-            languageCode = asr_result["language"]
+            language_code = asr_result["language"]
             st.markdown("<b>You:</b> " + text, unsafe_allow_html=True)
             print('ASR result is:' + text)
 
@@ -101,13 +118,15 @@ def app():
 
         with st.spinner("Getting ChatGPT answer for your command ..."):
             response = chatgpt.generate_response(text)
-            st.markdown("<b>chatGPT:</b> " + response, unsafe_allow_html=True)
-            print('chatGPT response is: '   + response)
-            spokenResponse = re.sub(r'\s+', ' ', response)
-            spokenResponse = spokenResponse.lstrip().rstrip()
-            #Speak the input text
-            generate_voice(spokenResponse, ttsVoices[languageCode])
+            st.markdown("<b>ChatGPT:</b> " + response, unsafe_allow_html=True)
+            print('ChatGPT response is: '   + response)
+            spoken_response = re.sub(r'\s+', ' ', response).strip()
+
+            # Speak the input text
+            generate_voice(spoken_response, tts_voices[language_code])
 
 
 if __name__ == "__main__":
     app()
+
+
